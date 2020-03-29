@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./js/echarts.min.js"></script>
+</head>
+<body>
+  <div id="main" style="width: 600px;height:400px;border: 1px solid rebeccapurple; margin: auto;"></div>
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main'));
+
+        // 指定图表的配置项和数据
+        var option = {
+            title: {
+                text: '疫情地图',
+                link: 'http://www.baidu.com',
+                textStyle: {
+                  fontSize: 30
+                },
+                left:'center',
+                padding: 15
+            },
+            xAxis:{
+              data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+            },
+            yAxis:{
+              splitNumber: 3
+            },
+            legend:{
+              bottom: 0,
+            //   data:[{
+            //     name:'支出',
+            //     icon:'circle',
+            //     textStyle: {
+            //       color: 'red'
+            //     }
+            //   },
+            },
+            tooltip:{
+              formatter(data) {
+                return data.marker + '￥' + data.value
+              }
+            },
+            series:[
+              {
+                name: '支出',
+                type: 'line',
+                data: [432,432,341,35,654,32,123]
+              },
+              {
+                name: '收入',
+                type: 'line',
+                data: [42,432,341,345,64,342,323]
+              },
+              {
+                name: '总资产',
+                type: 'bar',
+                data: [123,132,241,345,364,362,423]
+              }
+            ]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    </script>
+</body>
+</html>
