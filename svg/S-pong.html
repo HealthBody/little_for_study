@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    #svg1 {
+      width: 500px;
+      height: 500px;
+      margin: 0 auto;
+    }
+  </style>
+  <script src="./node_modules/svg.js/dist/svg.js"></script>
+  <script src="./node_modules/@svgdotjs/svg.draggable.js/dist/svg.draggable.js"></script>
+</head>
+
+<body>
+  <div id="svg1"></div>
+
+  <script>
+    var draw = SVG('svg1').size(500, 500)
+
+    // 游戏元素绘制
+    var width = 450, height = 350, paddleWidth = 20, paddleHeight = 100, playerLeft = 0, playerRight = 0;
+    // Game Background
+    var gameBg = draw.rect(width, height).fill('rgb(108, 160, 13)')
+    var line = draw.line(width / 2, 0, width / 2, height)
+    line.stroke({ width: 5, color: 'black', opacity: .8, dasharray: '10' })
+    line.draggable()
+    var scoreLeft = draw.text(playerLeft + '').font({
+      size: 32,
+      fill: 'pink',
+      family: 'Menlo sans-serif',
+      anchor: 'end'
+    }).move(width / 2 - 10, 10)
+    var scoreRight = scoreLeft.clone().text(playerRight + '').font({ anchor: 'start' }).move(width / 2 + 10, 10)
+    // Paddle && ball
+    var paddleLeft = draw.rect(paddleWidth, paddleHeight)
+    paddleLeft.fill('red').x(0).cy(height / 2)
+    var paddleRight = paddleLeft.clone()
+    paddleRight.fill('blue').x(width - 20)
+    var ball = draw.circle(20)
+    ball.fill('white').cx(width / 2).cy(height / 2)
+    callback(1)
+    console.log(paddleLeft.attr('fill'))
+
+
+    var lastTime, animFrame
+    function callback(ms) {
+      if (lastTime) {
+        update((ms - lastTime) / 1000)
+      }
+      lastTime = ms
+      animFrame = requestAnimationFrame(callback)
+    }
+
+
+    //游戏逻辑
+    var vx = Math.random() * 500 - 250, vy = Math.random() * 500 - 250
+    function update(dt) {
+      // Ball sport
+      ball.dmove(vx * dt, vy * dt)
+      var cx = ball.cx(), cy = ball.cy()
+      if ((vy < 0 && cy - 10 <= 0) || (vy > 0 && cy + 10 >= height)) {
+        vy = -vy
+      }
+      if ((vx < 0 && cx - 10 <= 0) || (vx > 0 && cx + 10 >= width)) {
+        if (vx > 0) {
+          ++playerLeft
+        }
+        if (vx < 0) {
+          ++playerRight
+        }
+        reset()
+        boom()
+      }
+      // Paddle collide
+      var paddleLeftY = paddleLeft.y(), paddleRightY = paddleRight.y()
+      if((vx < 0 && cx - 10 <= paddleWidth && cy > paddleLeftY  && cy < paddleLeftY + paddleHeight) || 
+      (vx > 0 && cx + 10 >= width - paddleWidth && cy > paddleRightY && cy < paddleRightY + paddleHeight)) {
+        vy = (cy - ((vx < 0 ? paddleLeftY : paddleRightY)) + paddleHeight / 2) * 7
+        vx = -vx * 1.05
+      }
+      // player move
+      var paddleRightCy = paddleRight.cy()
+      var playerPaddleY = paddleRight.y()
+      if(playerPaddleY <= 0 && paddleDirection == -1) {
+        paddleRight.cy(paddleHeight/2)
+      }else if( playerPaddleY >= height - paddleHeight && paddleDirection == 1) {
+        paddleRight.y(height - paddleHeight)
+      }else { 
+        paddleRight.dy(paddleDirection * paddleSpeed)
+      }
+      // AI移动
+      var difficult = 1
+      var paddleLeftCy = paddleLeft.cy()
+      var dy = Math.min(difficult, Math.abs(cy - paddleLeftCy))
+      paddleLeftCy += cy > paddleLeftCy ? dy : -dy
+      paddleLeft.cy(Math.max(paddleHeight / 2, Math.min(height - paddleHeight / 2, paddleLeftCy)))
+    }
+
+
+    // 按键逻辑
+    var paddleDirection = 0, paddleSpeed = 20
+    SVG.on(document, 'keydown', function(e) {
+      paddleDirection = e.keyCode === 40 ? 1 : e.keyCode === 38 ? -1 : 0
+    })
+    SVG.on(document, 'keyup', function(e) {
+      paddleDirection = 0
+    })
+    draw.on('click', function(  ) {
+      if (vx === 0 && vy === 0) {
+        vx = Math.random() * 500 - 250
+        vy = Math.random() * 500 - 250
+      }
+    })
+    
+
+    // 重置动画+分数变化
+    function reset() {
+      vx = 0
+      vy = 0
+      ball.animate(100).center(width/2, height/2)
+      paddleLeft.animate(100).cy(height/2)
+      paddleRight.animate(100).cy(height/2)
+      scoreLeft.text(playerLeft + '')
+      scoreRight.text(playerRight + '')
+    }
+
+
+    // 碰撞动画
+    function boom() { 
+      var paddle = ball.cx() > width/2 ? paddleLeft : paddleRight
+
+      var gradient = draw.gradient('radial', function(stop) {
+        stop.at(0, paddle.attr('fill'), 1)
+        stop.at(1, paddle.attr('fill'), 0)
+      })
+
+      var blast = draw.circle(300)
+      blast.center(ball.cx(), ball.cy()).fill(gradient)
+
+      blast.animate(1000, '>').opacity(0).after(function() {
+        blast.remove()
+      })
+    } 
+
+
+
+  </script>
+</body>
+
+</html>
