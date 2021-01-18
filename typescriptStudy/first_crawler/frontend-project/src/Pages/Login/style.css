@@ -1,0 +1,7 @@
+.login-page {
+  width: 300px;
+  padding: 20px 20px 0px 20px;
+  margin: 100px auto;
+  border: 1px solid #cccccc;
+}
+@import "~antd/dist/antd.css";
